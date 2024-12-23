@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Anchor Matcher",
+  "version": "1.0",
+  "permissions": ["contextMenus", "scripting", "storage"],
+  "host_permissions": ["https://www.ssjoy.org/dho/*"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.ssjoy.org/dho/*"],
+      "js": ["content.js"],
+	  "css": ["style.css"]
+    }
+  ]
+}

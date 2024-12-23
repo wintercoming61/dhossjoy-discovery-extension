@@ -1,0 +1,9 @@
+a.discovered {
+  color: black !important;
+  background-color: lightgreen !important;
+}
+
+a.undiscovered {
+  color: black !important;
+  background-color: #ff9696 !important;
+}

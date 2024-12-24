@@ -2,19 +2,41 @@
   "manifest_version": 3,
   "name": "Anchor Matcher",
   "version": "1.0",
-  "permissions": ["contextMenus", "scripting", "storage"],
-  "host_permissions": ["https://www.ssjoy.org/dho/*"],
+  "permissions": [
+    "contextMenus",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.ssjoy.org/dho/*"
+  ],
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "sail-16.png",
+      "48": "sail-48.png",
+      "128": "sail-128.png"
+    }
+  },
+  "icons": {
+    "16": "sail-16.png",
+    "48": "sail-48.png",
+    "128": "sail-128.png"
   },
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://www.ssjoy.org/dho/*"],
-      "js": ["content.js"],
-	  "css": ["style.css"]
+      "matches": [
+        "https://www.ssjoy.org/dho/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "style.css"
+      ]
     }
   ]
 }

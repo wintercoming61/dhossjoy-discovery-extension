@@ -17,13 +17,17 @@ document.getElementById("downloadFile").addEventListener("click", () => {
 	});
 });
 
+document.getElementById('reset').addEventListener('click', () => {
+	chrome.storage.local.set({ discoveredList: null })
+})
+
 document.addEventListener('DOMContentLoaded', function () {
 	chrome.storage.local.get('discoveredList', function (result) {
 		console.log(result)
 		if (result?.discoveredList != null) {
 			console.log('Discovered List:', result.discoveredList);
 
-			document.getElementById('discovery-count').textContent  = result.discoveredList.length
+			document.getElementById('discovery-count').textContent = result.discoveredList.length
 		} else {
 			console.log('Discovered List is empty or not found.');
 		}

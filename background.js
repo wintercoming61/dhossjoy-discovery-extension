@@ -2,6 +2,9 @@
 
 const discoveryUrlPattern = /dho\/discovery\/([0-9]+)$/
 function isToggleTargetUrl(url) {
+	/**
+	 * check if given url should be target of discovery toggling
+	 */
 	if (url == null) return false
 	let match = url.match(discoveryUrlPattern)
 	if (match != null) {
@@ -11,14 +14,6 @@ function isToggleTargetUrl(url) {
 
 }
 
-// function getDiscoveryIdFromUrl(url) {
-// 	let match = url.match(discoveryUrlPattern)
-// 	if (match != null) {
-// 		return match[1]
-// 	}
-// 	return null
-// }
-
 
 async function markAsDiscovered(linkUrl) {
 
@@ -26,7 +21,6 @@ async function markAsDiscovered(linkUrl) {
 	async function fetchDiscoveredList() {
 		let result = await chrome.storage.local.get('discoveredList')
 
-		console.log(result)
 		if (result?.discoveredList != null) {
 			return result.discoveredList
 		}
@@ -36,14 +30,16 @@ async function markAsDiscovered(linkUrl) {
 
 	async function addToDiscoveredList(newId) {
 		let dl = await fetchDiscoveredList()
-		console.log(`fetched dl: ${dl}`)
+
+		if (dl == null && newId != null) {
+			await saveDiscoveredList([newId])
+		}
 		if (dl.includes(newId)) {
 			return
 		}
 		else {
 			if (newId != null) {
 				dl.push(newId)
-				console.log(`pushed dl: ${dl}`)
 				await saveDiscoveredList(dl)
 
 			}
@@ -57,7 +53,6 @@ async function markAsDiscovered(linkUrl) {
 	async function removeFromDiscoveredList(removeItem) {
 
 		let dl = await fetchDiscoveredList()
-		console.log(dl)
 		if (dl == null) {
 			return
 		}
@@ -82,75 +77,31 @@ async function markAsDiscovered(linkUrl) {
 	}
 
 
-	function normalizeUrl(url) {
-		console.log(url)
-		const parsedUrl = new URL(url);  // Parse the URL using the URL constructor
+	function is_url_discovery_url_maching_discovery_id(url, discoveryid) {
 
-		// Normalize the path: remove trailing slash if it's the only path component
-		if (parsedUrl.pathname !== '/' && parsedUrl.pathname.endsWith('/')) {
-			parsedUrl.pathname = parsedUrl.pathname.slice(0, -1);  // Remove trailing slash
+		let url_discovery_id = getDiscoveryIdFromUrl(url)
+		if (url_discovery_id === discoveryid) {
+			return true
 		}
-
-		// Sort query parameters alphabetically by key to ensure consistent ordering
-		const searchParams = new URLSearchParams(parsedUrl.search);
-		const sortedParams = new URLSearchParams();
-		[...searchParams.entries()].sort().forEach(([key, value]) => sortedParams.append(key, value));
-		parsedUrl.search = sortedParams.toString();
-
-		// Optionally remove fragment (hash)
-		parsedUrl.hash = '';
-
-		console.log(parsedUrl)
-
-		// Return the normalized URL string
-		return parsedUrl.toString();
+		return false
 	}
-
-	function areUrlsEquivalent(url1, url2) {
-		return normalizeUrl(url1) === normalizeUrl(url2);
-	}
-
-
 
 	let discoveryid = getDiscoveryIdFromUrl(linkUrl)
-	console.log(`discovery id: ${discoveryid}`)
+	if (discoveryid == null) return
 	await addToDiscoveredList(discoveryid)
 
-	console.log('hello')
 
-
-	// let anchorArr = document.querySelectorAll(`a[href="${linkUrl}"]`)
 	let anchorArr = document.querySelectorAll('a')
-	console.log(anchorArr)
-	// an
 	anchorArr = Array.from(anchorArr).filter(x => {
 		let href = x.getAttribute('href')
 		if (href == null) return false
-		if (areUrlsEquivalent(href, linkUrl)) return true
-		return false
+		return is_url_discovery_url_maching_discovery_id(href, discoveryid)
 
-	})
-	console.log('anchor arr')
-	console.log(anchorArr)
-	anchorArr.forEach(a => {
-
-		console.log('anchor:')
-		console.log(a)
-		// remove discovered class and add undiscovered class
+	}).forEach(a => {
 		a.classList.remove('undiscovered')
 		a.classList.add('discovered')
-		// let cl = a.classList
-		// if (cl.includes('undiscovered')) {
-		// 	cl = cl.filter(x => x !== 'undiscovered')
-		// 	// ad undiscovered
-		// 	cl.push('discovered')
-		// 	a.classList = cl
-		// }
-
 	})
 
-	// reload page
-	// window.location.reload()
 
 }
 
@@ -158,11 +109,9 @@ async function markAsDiscovered(linkUrl) {
 
 async function markAsUndiscovered(linkUrl) {
 
-
 	async function fetchDiscoveredList() {
 		let result = await chrome.storage.local.get('discoveredList')
 
-		console.log(result)
 		if (result?.discoveredList != null) {
 			return result.discoveredList
 		}
@@ -170,15 +119,19 @@ async function markAsUndiscovered(linkUrl) {
 
 	}
 
-	function addToDiscoveredList(newId) {
-		let dl = fetchDiscoveredList()
-		if (!dl.includes(newId)) {
+	async function addToDiscoveredList(newId) {
+		let dl = await fetchDiscoveredList()
+
+		if (dl == null && newId != null) {
+			await saveDiscoveredList([newId])
+		}
+		if (dl.includes(newId)) {
 			return
 		}
 		else {
 			if (newId != null) {
 				dl.push(newId)
-				saveDiscoveredList(dl)
+				await saveDiscoveredList(dl)
 
 			}
 			else {
@@ -191,7 +144,6 @@ async function markAsUndiscovered(linkUrl) {
 	async function removeFromDiscoveredList(removeItem) {
 
 		let dl = await fetchDiscoveredList()
-		console.log(dl)
 		if (dl == null) {
 			return
 		}
@@ -199,9 +151,9 @@ async function markAsUndiscovered(linkUrl) {
 		saveDiscoveredList(dl)
 	}
 
-	function saveDiscoveredList(newlist) {
+	async function saveDiscoveredList(newlist) {
 		if (newlist != null) {
-			chrome.storage.local.set({ discoveredList: newlist });
+			await chrome.storage.local.set({ discoveredList: newlist });
 		}
 	}
 
@@ -216,28 +168,35 @@ async function markAsUndiscovered(linkUrl) {
 	}
 
 
+	function is_url_discovery_url_maching_discovery_id(url, discoveryid) {
+
+		let url_discovery_id = getDiscoveryIdFromUrl(url)
+		if (url_discovery_id === discoveryid) {
+			return true
+		}
+		return false
+	}
+
 	let discoveryid = getDiscoveryIdFromUrl(linkUrl)
+	if (discoveryid == null) return
 	await removeFromDiscoveredList(discoveryid)
 
-	let anchorArr = document.querySelectorAll(`a[href="${linkUrl}"]`)
-	anchorArr.forEach(a => {
-		// remove discovered class and add undiscovered class
-		let cl = a.classList
-		if (cl.includes('discovered')) {
-			cl = cl.filter(x => x !== 'discovered')
-			// ad undiscovered
-			cl.push('undiscovered')
-			a.classList = cl
-		}
 
+	let anchorArr = document.querySelectorAll('a')
+	anchorArr = Array.from(anchorArr).filter(x => {
+		let href = x.getAttribute('href')
+		if (href == null) return false
+		return is_url_discovery_url_maching_discovery_id(href, discoveryid)
+
+	}).forEach(a => {
+		a.classList.remove('discovered')
+		a.classList.add('undiscovered')
 	})
 
-	// window.location.reload()
 
 }
 
 function toggleAnchorState(linkUrl) {
-	console.log('inside toggleAnchorState')
 	const anchor = document.querySelector(`a[href="${linkUrl}"]`);
 	if (anchor) {
 		anchor.classList.toggle("discovered");
